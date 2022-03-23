@@ -2579,7 +2579,11 @@ class DFunc(ComWrkr, #damage function or DFunc handler
         # defaults
         #=======================================================================
         log = logger.getChild('%s'%self.tabn)
-        if curve_deviation is None: curve_deviation=self.curve_deviation
+        if curve_deviation is None: 
+            curve_deviation=self.curve_deviation
+        else:
+            self.curve_deviation = curve_deviation
+            
         log.debug('on %s from %s'%(str(df_raw.shape), self.curves_fp))
         
         self.df_raw = df_raw.copy() #useful for retrieving later
@@ -2587,7 +2591,8 @@ class DFunc(ComWrkr, #damage function or DFunc handler
         # precheck
         #=======================================================================
         try:
-            assert self.check_cdf(df_raw)
+            chk, msg = self.check_cdf(df_raw)
+            assert chk, msg
         except Exception as e:
             """letting this pass for backwards compatability"""
             log.error('curve failed check w/ \n    %s'%e)
@@ -2712,6 +2717,13 @@ class DFunc(ComWrkr, #damage function or DFunc handler
             ))
         
         return self
+    
+    def change_deviation(self,curve_deviation,**kwargs):
+        if curve_deviation == self.curve_deviation:
+            self.logger.warning('selected deviation already active (%s).. skipping'%curve_deviation)
+            return self
+        
+        return self.build(self.df_raw, self.logger, curve_deviation=curve_deviation, **kwargs)
         
         
     def get_dmg(self, #get damage from depth using depth damage curve
@@ -2994,7 +3006,7 @@ class DFunc(ComWrkr, #damage function or DFunc handler
                     logger=None):
         
         if logger is None: logger=self.logger
-        log = logger.getChild('check_crvd')
+        #log = logger.getChild('check_crvd')
         
         assert isinstance(crv_d, dict)
         
@@ -3005,16 +3017,15 @@ class DFunc(ComWrkr, #damage function or DFunc handler
         #=======================================================================
         miss_l = set(self.cdf_chk_d.keys()).difference(crv_d.keys())
         if not len(miss_l)==0:
-            log.error('dfunc \'%s\' missing keys: %s \n    %s'%(self.tabn, miss_l, self.curves_fp))
-            return False
+            return False, 'dfunc \'%s\' missing keys: %s \n    %s'%(self.tabn, miss_l, self.curves_fp)
         
         #=======================================================================
         # value type
         #=======================================================================
         for k, v in self.cdf_chk_d.items():
             if not isinstance(crv_d[k], v):
-                log.error( '%s got bad type on %s'%(self.tabn, k))
-                return False
+                return False, '%s got bad type on \'%s\'...expected %s got %s'%(
+                    self.tabn, k, v, type(crv_d[k]).__name__)
             
         #=======================================================================
         # order
@@ -3022,7 +3033,7 @@ class DFunc(ComWrkr, #damage function or DFunc handler
         """TODO: check order"""
         
 
-        return True
+        return True, ''
 
     
     
