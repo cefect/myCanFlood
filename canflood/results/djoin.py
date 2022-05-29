@@ -219,26 +219,13 @@ class Djoiner(Qcoms, Model):
         # convert event probs
         #=======================================================================
         if not relabel is None: #aep to ari
-            #===================================================================
-            # attn = 'r_ttl'
-            # #load the events data
-            # assert hasattr(self, attn)
-            # attv = getattr(self, attn)
-            # assert not attv=='', 'passed empty %s filepath!'%attn
-            # assert os.path.exists(attv), 'bad %s filepath: \'%s\''%(attn, attv)
-            # rttl_df_raw = pd.read_csv(attv)
-            #===================================================================
+ 
             rttl_df_raw = self.raw_d['r_ttl']
             
             #drop the aep row
             rttl_df = rttl_df_raw.loc[np.invert(rttl_df_raw['note']=='integration'), :]
             assert 'ead' not in rttl_df['aep']
-            
-            #check the raw event column types
-            #===================================================================
-            # col_types = np.array([type(e).__name__ for e in df_raw.columns])
-            # assert len(np.unique(col_types))==1, 'expected data column labels to be type: str'
-            #===================================================================
+ 
             
             #find event columns
             boolcol = df_raw.columns.astype(str).isin(rttl_df['aep'].astype(str))

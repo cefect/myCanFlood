@@ -256,6 +256,8 @@ class Session(hlpr.Q.Qcoms, hlpr.plot.Plotr, Dcoms): #handle one test session
     def build_meta(self, #build nice dataframe from rlib
                    rlib,
                    rkeys = ['r_passet'], #keys for sub-containers to concat
+                   smry_val='ead', #column to calc summary stats on
+                   stat_l=['sum', 'count'],
                    out_fp = None,
                    ):
         
@@ -299,13 +301,30 @@ class Session(hlpr.Q.Qcoms, hlpr.plot.Plotr, Dcoms): #handle one test session
             dxind1.index.set_names(['cid', 'name'], inplace=True)
             dxind2 = dxind1.swaplevel(axis=0).sort_index(level=0, sort_remaining=True)
             
+            
+            """
+            view(dxind2)
+            """
             #===================================================================
             # #get summary info
             #===================================================================
-            for stat in ['sum', 'count']:
-                gb = dxind2['ead'].groupby(level=0, axis=0)
-                ser = getattr(gb, stat)()
-                smry_df = smry_df.join(ser.rename(stat))
+            for stat in stat_l:
+                #no collapsing.. just report stats on each event
+                if smry_val =='all':
+ 
+                    gb = dxind2.groupby(level=0, axis=0)
+                    sdf = getattr(gb, stat)()
+                    
+                    new_smry = sdf.rename(columns={c:c[:20]+'_'+stat for c in sdf.columns})
+ 
+                    
+                else:
+                    gb = dxind2[smry_val].groupby(level=0, axis=0)
+                    new_smry = getattr(gb, stat)().rename(stat)
+
+ 
+                
+                smry_df = smry_df.join(new_smry)
                 
             #wrap
             meta_d[key] = dxind2
@@ -387,7 +406,8 @@ class Session(hlpr.Q.Qcoms, hlpr.plot.Plotr, Dcoms): #handle one test session
         #=======================================================================
         fp_d = dict()
         for data_dir in dir_l:
-            if not base_dir is None: data_dir = os.path.join(base_dir, data_dir)
+            if not base_dir is None: 
+                data_dir = os.path.join(base_dir, data_dir)
             assert os.path.exists(data_dir), data_dir
             rfn_l = [e for e in os.listdir(data_dir) if e.endswith(ext)]
             
@@ -786,13 +806,19 @@ class WorkFlow(wFlow.scripts_retrieve.WF_retriev, Session): #worker with methods
         assert isinstance(finv_vlay, QgsVectorLayer), 'no feats selected for \'%s\'?'%self.name
         
         assert self.cid in [f.name() for f in finv_vlay.fields()], self.name
-        #=======================================================================
-        # execute
-        #=======================================================================
-        df = wrkr.finv_to_csv(finv_vlay, felv=pars_d['felv'], write=self.write, logger=log)
-        if not self.write: wrkr.upd_cf_finv('none')
         
-        return df
+        if finv_vlay.dataProvider().featureCount()>0:
+            #=======================================================================
+            # execute
+            #=======================================================================
+            df = wrkr.finv_to_csv(finv_vlay, felv=pars_d['felv'], write=self.write, logger=log)
+            if not self.write: wrkr.upd_cf_finv('none')
+            return df
+        else:
+            log.warning('got no features')
+            return None
+        
+        
     
     
     
@@ -1159,7 +1185,7 @@ class WorkFlow(wFlow.scripts_retrieve.WF_retriev, Session): #worker with methods
             rkwargs['res_per_asset']=res_per_asset
         
 
-        wrkr.setup_fromData(self.data_d, logger=log) #setup w/ the pre-loaded data
+        wrkr.setup_fromData(self.data_d, logger=log, prep_kwargs=dict(check_evals=calc_risk)) #setup w/ the pre-loaded data
         
         #=======================================================================
         # execute

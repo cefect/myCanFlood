@@ -221,11 +221,8 @@ class WF_retriev(object):
                        
                        #model control
                        pars_d=None, 
-
-                       
-
-                       #function control
-                                              
+ 
+                       #function control              
                        write=None,                       
                        **kwargs):
                 
@@ -235,9 +232,7 @@ class WF_retriev(object):
         if write is  None: write=self.write
         assert dkey in ['rsamp_vlay', 'dtmsamp_vlay']
         
-        
-        
-        
+ 
         #pull previously loaded
         finv_vlay = self.data_d['finv_vlay']
         
@@ -248,7 +243,6 @@ class WF_retriev(object):
         """
         TODO: harmonize this to at most 2 types
         """
-
             
         #kwargs from control file
         pkwargs = {k:pars_d[k] for k in ['dthresh', 'as_inun', 'psmp_stat'] if k in pars_d}
@@ -263,13 +257,10 @@ class WF_retriev(object):
         #=======================================================================
         # execute
         #=======================================================================
-        
-        res_vlay = wrkr.run(rlay_l, finv_vlay,  
-                              **kwargs)
+        res_vlay = wrkr.run(rlay_l, finv_vlay,**kwargs)
         
         wrkr.check()
-        
-        wrkr.rlay_inun_lib
+ 
         #=======================================================================
         # write
         #=======================================================================

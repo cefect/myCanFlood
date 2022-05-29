@@ -1380,9 +1380,17 @@ class Rsamp(Plotr, Qcoms):
         
         dtkey = int(dthresh*100) #best to use ints for lookups
         #=======================================================================
-        # build new one
+        # check if we have a pre-built 
         #=======================================================================
-        if not dtkey in self.rlay_inun_lib[rlay.name()]['thresh_d']: #{hazlayName:{'dep_fp':fp, 'thresh_d':{threshVal:fp}
+        if not 'thresh_d' in self.rlay_inun_lib[rlay.name()]:
+            thresh_d = dict()
+        else:
+            thresh_d = self.rlay_inun_lib[rlay.name()]['thresh_d']
+            
+        #=======================================================================
+        # build a new one
+        #=======================================================================
+        if not dtkey in thresh_d: #{hazlayName:{'dep_fp':fp, 'thresh_d':{threshVal:fp}
             
             dep_fp = self.rlay_inun_lib[rlay.name()]['dep_fp']
             
@@ -1396,12 +1404,13 @@ class Rsamp(Plotr, Qcoms):
                 del rcentry
                 
             assert os.path.exists(dep_fp)
-            self.rlay_inun_lib[rlay.name()]['thresh_d'][dtkey] = fp
+            thresh_d[dtkey] = fp
             
         #=======================================================================
         # wrap
         #=======================================================================
-        fp = self.rlay_inun_lib[rlay.name()]['thresh_d'][dtkey]
+        fp = thresh_d[dtkey]
+        self.rlay_inun_lib[rlay.name()]['thresh_d']=thresh_d
         assert os.path.exists(fp)
         return fp 
     

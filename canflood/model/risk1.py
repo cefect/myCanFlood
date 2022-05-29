@@ -111,7 +111,7 @@ class Risk1(RiskModel):
         
         
     def prep_model(self, #attach and prepare data for  model run
-
+                   check_evals=True,
                ): 
         """
         called by Dialog and standalones
@@ -120,7 +120,7 @@ class Risk1(RiskModel):
             
             
         self.set_finv()
-        self.set_evals() 
+        self.set_evals(check=check_evals) 
         self.set_expos()
         
         if not self.exlikes == '':
@@ -245,6 +245,8 @@ class Risk1(RiskModel):
             bres_df = self.ev_multis(cdf, self.data_d['exlikes'], aep_ser, logger=log)
             
         #no duplicates. .just rename by aep
+        elif not calc_risk:
+            bres_df = cdf.copy()
         else:
             bres_df = cdf.rename(columns = aep_ser.to_dict()).sort_index(axis=1)
             
@@ -257,14 +259,17 @@ class Risk1(RiskModel):
         # checks
         #======================================================================
         #check the columns
-        assert np.array_equal(bres_df.columns.values, aep_ser.unique()), 'column name problem'
-        _ = self.check_monot(bres_df)
+ 
+
         self.feedback.upd_prog(10, method='append')
         
         #======================================================================
         # get ead per asset------
         #======================================================================
         if calc_risk:
+            assert np.array_equal(bres_df.columns.values, aep_ser.unique()), 'column name problem'
+            _ = self.check_monot(bres_df)
+        
             if res_per_asset:
                 res_df = self.calc_ead(bres_df)
                             
@@ -309,5 +314,5 @@ class Risk1(RiskModel):
 
     
 
-if __name__ =="__main__": 
-      print('???')
+if __name__ =="__main__":
+    print('???')
