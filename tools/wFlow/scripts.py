@@ -390,13 +390,29 @@ class Session(hlpr.Q.Qcoms, hlpr.plot.Plotr, Dcoms): #handle one test session
         assert len(d)>0
         return d
     
-    def load_layers_dirs(self, #load layers from multiple directories
+    def load_layers_dirs(self, #
                          dir_l,
                     ext = '.tif',
                     aoi_vlay=None,
                     base_dir=None, #optional incase dir_l is relative
                     logger=None,
                     **kwargs):
+        """load layers from a list of directories
+        
+        Parameters
+        -----------
+        dir_l: list
+            list of directories to load from
+            
+        base_dir: str
+            optional base path for dir_l
+            
+            
+        Returns
+        ---------
+        dict
+            layer name: QgsMapLayer
+        """
         
         if logger is None: logger=self.logger
         log=logger.getChild('load_layers_dirs')
